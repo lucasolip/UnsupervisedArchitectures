@@ -42,6 +42,34 @@ class GrowingNeuralGas(object):
         self.N = newN
         self.A.assign(tf.gather(self.A, indexToNotRemove, axis=0))
 
+    def countClusters(self):
+        visited = [False for i in range(len(self.N))]
+        stack = []
+
+        count = 0
+        for unit in self.N:
+            if not visited[unit.id]:
+                count += 1
+                stack.append(unit)
+
+                while len(stack):
+                    current = stack[-1]
+                    stack.pop()
+
+                    if not visited[current.id]:
+                        print(current, end=' ')
+                        visited[current.id] = True
+
+                    for node in current.neighborhood:
+                        for checkNode in self.N:
+                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
+                                node = checkNode
+                                break
+                        if not visited[node.id]:
+                            stack.append(node)
+                print()
+
+        return count
 
     def fit(self, trainingX, numberEpochs):
         self.A = tf.Variable(tf.random.normal([2, trainingX.shape[1]], 0.0, 1.0, dtype=tf.float32))
