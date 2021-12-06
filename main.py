@@ -13,10 +13,13 @@ def test():
     ax.scatter(X[:, 0], X[:, 1], X[:, 2])
 
     growingNeuralGas = GrowingNeuralGas(eta=25)
-    growingNeuralGas.fit(X, 100)
+    growingNeuralGas.fit(X, 1000)
     print(growingNeuralGas.countClusters())
 
-    ax.scatter(growingNeuralGas.A[:, 0], growingNeuralGas.A[:, 1], growingNeuralGas.A[:, 2])
+    ax.scatter(growingNeuralGas.A[:, 0], growingNeuralGas.A[:, 1], growingNeuralGas.A[:, 2], 'r')
+    edges = growingNeuralGas.getEdges()
+    for edge in edges:
+        ax.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
     plt.show()
 
 

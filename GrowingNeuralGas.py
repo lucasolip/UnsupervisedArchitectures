@@ -71,6 +71,35 @@ class GrowingNeuralGas(object):
 
         return count
 
+    def getEdges(self):
+        visited = [False for i in range(len(self.N))]
+        stack = []
+        edges = []
+
+        for unit in self.N:
+            if not visited[unit.id]:
+                stack.append(unit)
+
+                while len(stack):
+                    current = stack[-1]
+                    stack.pop()
+
+                    if not visited[current.id]:
+                        visited[current.id] = True
+
+                    for node in current.neighborhood:
+                        edge = tf.stack([self.A[current.id], self.A[node]])
+                        if len(edges) == 0 or (not tf.reduce_any(tf.reduce_all(tf.equal(edge, edges), axis=(1, 2)))):
+                            edges.append(edge)
+                        for checkNode in self.N:
+                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
+                                node = checkNode
+                                break
+                        if not visited[node.id]:
+                            stack.append(node)
+        return edges
+
+
     def fit(self, trainingX, numberEpochs):
         self.A = tf.Variable(tf.random.normal([2, trainingX.shape[1]], 0.0, 1.0, dtype=tf.float32))
         self.N.append(Graph(0))
