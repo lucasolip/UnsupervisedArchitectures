@@ -1,11 +1,14 @@
+import functools
+
 import numpy as np
 import tensorflow as tf
 
 from Graph import Graph
+from GrowingNeuralGasPlotter import GrowingNeuralGasPlotter
 
 class GrowingNeuralGas(object):
 
-    def __init__(self, epsilon_a=.1, epsilon_n=.05, a_max=25, eta=25, alpha=.1, delta=.1, maxNumberUnits=10):
+    def __init__(self, epsilon_a=.1, epsilon_n=.05, a_max=10, eta=5, alpha=.1, delta=.1, maxNumberUnits=1000):
         self.A = None
         self.N = []
         self.error_ = None
@@ -18,7 +21,9 @@ class GrowingNeuralGas(object):
         self.maxNumberUnits = maxNumberUnits
 
     def incrementAgeNeighborhood(self, indexNearestUnit):
-        self.N[indexNearestUnit].incrementAgeNeighborhood(1)
+        self.N[indexNearestUnit].incrementAgeNeighborhood(1.0)
+        for indexNeighbour in self.N[indexNearestUnit].neighborhood:
+            self.N[indexNeighbour].incrementAgeNeighbour(indexNearestUnit, 1.0)
 
     def findNearestUnit(self, xi, A):
         return tf.math.argmin(tf.math.reduce_sum(tf.math.pow(A - xi, 2), 1))
@@ -36,69 +41,38 @@ class GrowingNeuralGas(object):
 
     def pruneA(self):
         indexToNotRemove = [index for index in tf.range(self.N.__len__()) if self.N[index].neighborhood.__len__() > 0]
-        newN = []
-        for index in tf.range(indexToNotRemove.__len__()):
-            newN.append(Graph(index, self.N[indexToNotRemove[index]].neighborhood, self.N[indexToNotRemove[index]].ageNeighborhood))
-        self.N = newN
-        self.A.assign(tf.gather(self.A, indexToNotRemove, axis=0))
+        self.A = tf.Variable(tf.gather(self.A, indexToNotRemove, axis=0))
 
-    def countClusters(self):
-        visited = [False for i in range(len(self.N))]
-        stack = []
+        for graphIndex in reversed(range(self.N.__len__())):
+            if self.N[graphIndex].neighborhood.__len__() == 0:
+                for pivot in range(graphIndex + 1, self.N.__len__()):
+                    self.N[pivot].id -= 1
+                    for indexN in range(self.N.__len__()):
+                        for indexNeighbothood in range(self.N[indexN].neighborhood.__len__()):
+                            if self.N[indexN].neighborhood[indexNeighbothood] == pivot:
+                                self.N[indexN].neighborhood[indexNeighbothood] -= 1
+                self.N.pop(graphIndex)
 
-        count = 0
-        for unit in self.N:
-            if not visited[unit.id]:
-                count += 1
-                stack.append(unit)
-
-                while len(stack):
-                    current = stack[-1]
-                    stack.pop()
-
-                    if not visited[current.id]:
-                        print(current, end=' ')
-                        visited[current.id] = True
-
-                    for node in current.neighborhood:
-                        for checkNode in self.N:
-                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
-                                node = checkNode
-                                break
-                        if not visited[node.id]:
-                            stack.append(node)
-                print()
-
-        return count
-
-    def getEdges(self):
-        visited = [False for i in range(len(self.N))]
-        stack = []
-        edges = []
-
-        for unit in self.N:
-            if not visited[unit.id]:
-                stack.append(unit)
-
-                while len(stack):
-                    current = stack[-1]
-                    stack.pop()
-
-                    if not visited[current.id]:
-                        visited[current.id] = True
-
-                    for node in current.neighborhood:
-                        edge = tf.stack([self.A[current.id], self.A[node]])
-                        if len(edges) == 0 or (not tf.reduce_any(tf.reduce_all(tf.equal(edge, edges), axis=(1, 2)))):
-                            edges.append(edge)
-                        for checkNode in self.N:
-                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
-                                node = checkNode
-                                break
-                        if not visited[node.id]:
-                            stack.append(node)
-        return edges
-
+    def getGraphConnectedComponents(self):
+        connectedComponentIndeces = list(range(self.N.__len__()))
+        for graphIndex in range(self.N.__len__()):
+            for neighbourIndex in self.N[graphIndex].neighborhood:
+                if connectedComponentIndeces[graphIndex] <= connectedComponentIndeces[neighbourIndex]:
+                    connectedComponentIndeces[neighbourIndex] = connectedComponentIndeces[graphIndex]
+                else:
+                    aux = connectedComponentIndeces[graphIndex]
+                    for pivot in range(graphIndex, self.N.__len__()):
+                        if connectedComponentIndeces[pivot] == aux:
+                            connectedComponentIndeces[pivot] = connectedComponentIndeces[neighbourIndex]
+        uniqueConnectedComponentIndeces = functools.reduce(lambda cCI, index: cCI.append(index) or cCI if index not in cCI else cCI, connectedComponentIndeces, [])
+        connectedComponents = []
+        for connectedComponentIndex in uniqueConnectedComponentIndeces:
+            connectedComponent = []
+            for index in range(connectedComponentIndeces.__len__()):
+                if connectedComponentIndex == connectedComponentIndeces[index]:
+                    connectedComponent.append(self.N[index])
+            connectedComponents.append(connectedComponent)
+        return uniqueConnectedComponentIndeces.__len__(), connectedComponents
 
     def fit(self, trainingX, numberEpochs):
         self.A = tf.Variable(tf.random.normal([2, trainingX.shape[1]], 0.0, 1.0, dtype=tf.float32))
@@ -110,6 +84,7 @@ class GrowingNeuralGas(object):
         while epoch < numberEpochs and self.A.shape[0] < self.maxNumberUnits:
                 shuffledTrainingX = tf.random.shuffle(trainingX)
                 for row_ in tf.range(shuffledTrainingX.shape[0]):
+
                     xi = shuffledTrainingX[row_]
 
                     indexNearestUnit = self.findNearestUnit(xi, self.A)
@@ -134,6 +109,11 @@ class GrowingNeuralGas(object):
 
                     self.pruneA()
 
+                    # numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
+                    # GrowingNeuralGasPlotter.plotGraphConnectedComponent('./figs',
+                    #                                                     'graphConnectedComponents_' + '{}_{}'.format(self.A.shape[0], numberGraphConnectedComponents),
+                    #                                                     self)
+
                     if not (numberProcessedRow + 1) % self.eta:
                         indexUnitWithMaxError_ = tf.squeeze(tf.math.argmax(self.error_), 0)
                         indexNeighbourWithMaxError_ = self.findIndexNeighbourMaxError(indexUnitWithMaxError_)
@@ -154,9 +134,50 @@ class GrowingNeuralGas(object):
                     numberProcessedRow += 1
 
                 epoch += 1
+                print("GrowingNeuralGas::epoch: {}".format(epoch))
 
-
-
-
-
-
+    def countClusters(self):
+        visited = [False for i in range(len(self.N))]
+        stack = []
+        count = 0
+        for unit in self.N:
+            if not visited[unit.id]:
+                count += 1
+                stack.append(unit)
+                while len(stack):
+                    current = stack[-1]
+                    stack.pop()
+                    if not visited[current.id]:
+                        visited[current.id] = True
+                    for node in current.neighborhood:
+                        for checkNode in self.N:
+                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
+                                node = checkNode
+                                break
+                        if not visited[node.id]:
+                            stack.append(node)
+        return count
+    def getEdges(self):
+        visited = [False for i in range(len(self.N))]
+        stack = []
+        edges = []
+        for unit in self.N:
+            if not visited[unit.id]:
+                stack.append(unit)
+                while len(stack):
+                    current = stack[-1]
+                    stack.pop()
+                    if not visited[current.id]:
+                        visited[current.id] = True
+                    for node in current.neighborhood:
+                        edge = tf.stack([self.A[current.id], self.A[node]])
+                        if len(edges) == 0 or (
+                        not tf.reduce_any(tf.reduce_all(tf.equal(edge, edges), axis=(1, 2)))):
+                            edges.append(edge)
+                        for checkNode in self.N:
+                            if tf.cast(checkNode.id, dtype=tf.int64) == node:
+                                node = checkNode
+                                break
+                        if not visited[node.id]:
+                            stack.append(node)
+        return edges

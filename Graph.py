@@ -19,6 +19,9 @@ class Graph(object):
     def incrementAgeNeighborhood(self, increment):
         self.__ageNeighborhood = [ageNeighbour + increment for ageNeighbour in self.__ageNeighborhood]
 
+    def incrementAgeNeighbour(self, neighbour, increment):
+        self.__ageNeighborhood[self.__neighborhood.index(neighbour)] += increment
+
     def setAge(self, neighbour, age):
         self.__ageNeighborhood[self.__neighborhood.index(neighbour)] = age
 
