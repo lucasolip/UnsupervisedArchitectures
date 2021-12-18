@@ -4,15 +4,20 @@ import tensorflow as tf
 
 class GrowingNeuralGasPlotter(object):
     @staticmethod
-    def plotGraphConnectedComponent(pathFigure, nameFigure, growingNeuralGas):
+    def plotGraphConnectedComponent(pathFigure, nameFigure, A, N, X, edges):
         figure = plt.figure()
-        ax = figure.add_subplot(projection='3d')
+        axis = figure.add_subplot(projection='3d')
+        axis.scatter(X[:, 0], X[:, 1], X[:, 2])
 
-        ax.scatter(growingNeuralGas.A[:, 0], growingNeuralGas.A[:, 1], growingNeuralGas.A[:, 2], 'r')
-        edges = growingNeuralGas.getEdges()
+        x = [A[index][0].numpy() for index in tf.range(A.shape[0])]
+        y = [A[index][1].numpy() for index in tf.range(A.shape[0])]
+        z = [A[index][2].numpy() for index in tf.range(A.shape[0])]
+
+        graphZero = axis.scatter(x, y, z)
         for edge in edges:
-            ax.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
+            axis.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
 
         # matplotlib.pyplot.show()
         figure.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
-        plt.close('all')
+        figure.savefig(pathFigure + '//' + nameFigure + '.svg')
+        plt.close(figure)

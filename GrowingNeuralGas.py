@@ -109,11 +109,6 @@ class GrowingNeuralGas(object):
 
                     self.pruneA()
 
-                    # numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
-                    # GrowingNeuralGasPlotter.plotGraphConnectedComponent('./figs',
-                    #                                                     'graphConnectedComponents_' + '{}_{}'.format(self.A.shape[0], numberGraphConnectedComponents),
-                    #                                                     self)
-
                     if not (numberProcessedRow + 1) % self.eta:
                         indexUnitWithMaxError_ = tf.squeeze(tf.math.argmax(self.error_), 0)
                         indexNeighbourWithMaxError_ = self.findIndexNeighbourMaxError(indexUnitWithMaxError_)
@@ -133,8 +128,16 @@ class GrowingNeuralGas(object):
                     self.error_.assign(self.error_ * self.delta)
                     numberProcessedRow += 1
 
+                numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
+                print("GrowingNeuralGas::numberUnits: {} - GrowingNeuralGas::numberGraphConnectedComponents: {}".format(
+                    self.A.shape[0], numberGraphConnectedComponents))
+                GrowingNeuralGasPlotter.plotGraphConnectedComponent('.//data',
+                                                                    'graphConnectedComponents_' + '{}_{}'.format(
+                                        self.A.shape[0], numberGraphConnectedComponents), self.A, self.N, trainingX, self.getEdges())
                 epoch += 1
                 print("GrowingNeuralGas::epoch: {}".format(epoch))
+
+
 
     def countClusters(self):
         visited = [False for i in range(len(self.N))]

@@ -3,13 +3,16 @@ import matplotlib.pyplot as plt
 
 from GrowingNeuralGas import GrowingNeuralGas
 
+# Model
 epochs = 10
-stdd = .1
+
+# Test set
+standard_deviation = .1
 
 def test():
-    X = tf.concat([tf.random.normal([50, 3], 0.0, stdd, dtype=tf.float32) + tf.constant([0.0, 0.0, 1.0]),
-                   tf.random.normal([50, 3], 0.0, stdd, dtype=tf.float32) + tf.constant([1.0, 0.0, 1.0]),
-                   tf.random.normal([50, 3], 0.0, stdd, dtype=tf.float32) + tf.constant([1.0, 1.0, 1.0])], 0)
+    X = tf.concat([tf.random.normal([50, 3], 0.0, standard_deviation, dtype=tf.float32) + tf.constant([0.0, 0.0, 1.0]),
+                   tf.random.normal([50, 3], 0.0, standard_deviation, dtype=tf.float32) + tf.constant([1.0, 0.0, 1.0]),
+                   tf.random.normal([50, 3], 0.0, standard_deviation, dtype=tf.float32) + tf.constant([1.0, 1.0, 1.0])], 0)
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
