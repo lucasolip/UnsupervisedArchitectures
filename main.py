@@ -5,6 +5,7 @@ from GrowingNeuralGas import GrowingNeuralGas
 
 # Model
 epochs = 10
+eta = 25
 
 # Test set
 standard_deviation = .1
@@ -27,6 +28,13 @@ def test():
     edges = growingNeuralGas.getEdges()
     for edge in edges:
         ax.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
+
+    fig2 = plt.figure()
+    ax2 = fig2.add_subplot(projection='3d')
+    clusters = [0 for i in range(X.shape[0])]
+    for i in range(X.shape[0]):
+        clusters[i] = growingNeuralGas.predict(X[i])
+    ax2.scatter(X[:, 0], X[:, 1], X[:, 2], c=clusters)
     plt.show()
 
 

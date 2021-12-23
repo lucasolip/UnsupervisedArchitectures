@@ -20,6 +20,8 @@ class GrowingNeuralGas(object):
         self.delta = delta
         self.maxNumberUnits = maxNumberUnits
 
+        self.clusters = []
+
     def incrementAgeNeighborhood(self, indexNearestUnit):
         self.N[indexNearestUnit].incrementAgeNeighborhood(1.0)
         for indexNeighbour in self.N[indexNearestUnit].neighborhood:
@@ -137,9 +139,24 @@ class GrowingNeuralGas(object):
                 epoch += 1
                 print("GrowingNeuralGas::epoch: {}".format(epoch))
 
+    def predict(self, X):
+        if not self.clusters:
+            self.countClusters()
+
+        squared_distances = tf.reduce_sum(tf.square(X - self.A), 1)
+        num_clusters = tf.reduce_max(self.clusters) + 1
+        cluster_distances = [0 for i in range(num_clusters)]
+        cluster_sizes = [0 for i in range(num_clusters)]
+        for i in range(len(self.clusters)):
+            cluster_distances[self.clusters[i]] += squared_distances[i]
+            cluster_sizes[self.clusters[i]] += 1
+        cluster_distances = tf.divide(cluster_distances, cluster_sizes)
+        return tf.argmin(cluster_distances)
 
 
     def countClusters(self):
+        self.clusters = [-1 for i in range(self.A.shape[0])]
+
         visited = [False for i in range(len(self.N))]
         stack = []
         count = 0
@@ -152,6 +169,7 @@ class GrowingNeuralGas(object):
                     stack.pop()
                     if not visited[current.id]:
                         visited[current.id] = True
+                        self.clusters[current.id] = count - 1
                     for node in current.neighborhood:
                         for checkNode in self.N:
                             if tf.cast(checkNode.id, dtype=tf.int64) == node:
@@ -160,6 +178,7 @@ class GrowingNeuralGas(object):
                         if not visited[node.id]:
                             stack.append(node)
         return count
+
     def getEdges(self):
         visited = [False for i in range(len(self.N))]
         stack = []
