@@ -21,7 +21,7 @@ def test():
 
     growingNeuralGas = GrowingNeuralGas(eta=25)
     growingNeuralGas.loadModel("model.h")
-    growingNeuralGas.fit(X, epochs)
+    growingNeuralGas.fit(X, epochs, modelLoaded= True)
     print(growingNeuralGas.countClusters())
     print(growingNeuralGas.A.shape)
 
@@ -37,7 +37,5 @@ def test():
         clusters[i] = growingNeuralGas.predict(X[i])
     ax2.scatter(X[:, 0], X[:, 1], X[:, 2], c=clusters)
     plt.show()
-
-
 
 test()
