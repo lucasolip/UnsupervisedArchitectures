@@ -22,6 +22,7 @@ def test():
     growingNeuralGas = GrowingNeuralGas(eta=25)
     growingNeuralGas.loadModel("model.h")
     growingNeuralGas.fit(X, epochs, modelLoaded= True)
+    growingNeuralGas.saveModel("model.h")
     print(growingNeuralGas.countClusters())
     print(growingNeuralGas.A.shape)
 
