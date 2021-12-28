@@ -23,8 +23,8 @@ def test():
     print(growingNeuralGas.countClusters())
     print(growingNeuralGas.A.shape)
 
-    GrowingNeuralGasPlotter.plotNetworkStructure3D(growingNeuralGas.A, X, growingNeuralGas.getEdges())
-    GrowingNeuralGasPlotter.plotClusters3D(growingNeuralGas, X)
+    GrowingNeuralGasPlotter.plotNetworkStructure3D(growingNeuralGas.A, X, growingNeuralGas.getEdges(), title="Estructura de la red")
+    GrowingNeuralGasPlotter.plotClusters3D(growingNeuralGas, X, title="Agrupamientos encontrados")
     GrowingNeuralGasPlotter.show()
 
 
