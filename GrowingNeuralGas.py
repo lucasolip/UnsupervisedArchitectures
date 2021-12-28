@@ -1,4 +1,5 @@
 import functools
+from time import time
 
 import numpy
 import numpy as np
@@ -81,15 +82,18 @@ class GrowingNeuralGas(object):
         return uniqueConnectedComponentIndeces.__len__(), connectedComponents
 
     def fit(self, trainingX, numberEpochs, modelLoaded=False):
-        if (modelLoaded == False):
+        print("Starting training with training set of shape", trainingX.shape)
+
+        if not modelLoaded:
             self.A = tf.Variable(tf.random.normal([2, trainingX.shape[1]], 0.0, 1.0, dtype=tf.float32))
             self.N.append(Graph(0))
             self.N.append(Graph(1))
             self.error_ = tf.Variable(tf.zeros([2, 1]), dtype=tf.float32)
 
-        epoch = 0
+        epoch = 1
         numberProcessedRow = 0
         while epoch < numberEpochs and self.A.shape[0] < self.maxNumberUnits:
+            initime = time()
             shuffledTrainingX = tf.random.shuffle(trainingX)
             for row_ in tf.range(shuffledTrainingX.shape[0]):
 
@@ -144,6 +148,7 @@ class GrowingNeuralGas(object):
                 self.error_.assign(self.error_ * self.delta)
                 numberProcessedRow += 1
 
+            print("GrowingNeuralGas::epoch: {}".format(epoch), "Time elapsed:", time()-initime)
             numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
             print("GrowingNeuralGas::numberUnits: {} - GrowingNeuralGas::numberGraphConnectedComponents: {}".format(
                 self.A.shape[0], numberGraphConnectedComponents))
@@ -152,7 +157,6 @@ class GrowingNeuralGas(object):
                                                                     self.A.shape[0], numberGraphConnectedComponents),
                                                                 self.A, self.N, trainingX, self.getEdges())
             epoch += 1
-            print("GrowingNeuralGas::epoch: {}".format(epoch))
             print("Saving model...")
             self.saveModel("model.h")
 
