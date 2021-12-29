@@ -1,10 +1,9 @@
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 from GrowingNeuralGas import GrowingNeuralGas
 
 # Model
-from GrowingNeuralGasPlotter import GrowingNeuralGasPlotter
-
 epochs = 10
 eta = 25
 
@@ -16,16 +15,28 @@ def test():
                    tf.random.normal([50, 3], 0.0, standard_deviation, dtype=tf.float32) + tf.constant([1.0, 0.0, 1.0]),
                    tf.random.normal([50, 3], 0.0, standard_deviation, dtype=tf.float32) + tf.constant([1.0, 1.0, 1.0])], 0)
 
-
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2])
 
     growingNeuralGas = GrowingNeuralGas(eta=25)
     growingNeuralGas.fit(X, epochs)
     print(growingNeuralGas.countClusters())
     print(growingNeuralGas.A.shape)
 
-    GrowingNeuralGasPlotter.plotNetworkStructure3D(growingNeuralGas.A, X, growingNeuralGas.getEdges(), title="Estructura de la red")
-    GrowingNeuralGasPlotter.plotClusters3D(growingNeuralGas, X, title="Agrupamientos encontrados")
-    GrowingNeuralGasPlotter.show()
+    ax.scatter(growingNeuralGas.A[:, 0], growingNeuralGas.A[:, 1], growingNeuralGas.A[:, 2], 'r')
+    edges = growingNeuralGas.getEdges()
+    for edge in edges:
+        ax.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
+
+    fig2 = plt.figure()
+    ax2 = fig2.add_subplot(projection='3d')
+    clusters = [0 for i in range(X.shape[0])]
+    for i in range(X.shape[0]):
+        clusters[i] = growingNeuralGas.predict(X[i])
+    ax2.scatter(X[:, 0], X[:, 1], X[:, 2], c=clusters)
+    plt.show()
+
 
 
 test()

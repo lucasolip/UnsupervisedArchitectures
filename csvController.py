@@ -1,28 +1,35 @@
-import csv
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
+from pcaDecomposition import PcaDecomposition
 
-class CsvController(object):
+def load_data(dataPath):
+    data = pd.read_csv(dataPath)
+    return data
 
-    def __init__(self, directory, hasHeader = True):
-        self.file = open(directory)
-        self.fileType = type(self.file)
-        self.csvreader = csv.reader(self.file)
-        self.hasHeader = hasHeader
+def removeColumns(data, cols = []):
+    for col in cols:
+        data.drop(col, inplace=True, axis=1)
 
-    def __del__(self):
-        self.file.close()
+def replaceNaNWithMedian(data):
+    return data.fillna(data.median())
 
-    #shape=(150, 3), dtype=float32)
-    def getCsvToTensor(self):
-        rows = []
-        header = []
-        if self.hasHeader:
-            header = next(self.csvreader)
-        for row in self.csvreader:
-            processedRow = []
-            for col in row:
-                processedRow.append(float(col))
-            rows.append(processedRow)
+def fromDataFrameToTensor(data):
+    return tf.convert_to_tensor(data, dtype= 'float32')
 
-        tensor = tf.convert_to_tensor(value = rows, dtype = 'float32')
-        return tensor, header
+def getDataframeValues(data):
+    return data.values
+
+def getDataframeHeader(data):
+    return list(data.columns)
+
+def pcaByVarianceRetention(data, percent):
+    pca = PcaDecomposition()
+    pca.getDecompositionByPercentOfDataRetained(percent)
+    return pca.fitDataWithoutHeader(data)
+
+def pcaByNComponents(data, components):
+    pca = PcaDecomposition()
+    pca.getDecompositionByNComponentsRemaining(components)
+    return pca.fitDataWithoutHeader(data)

@@ -1,5 +1,4 @@
 import functools
-from time import time
 
 import numpy
 import numpy as np
@@ -12,11 +11,11 @@ from GrowingNeuralGasPlotter import GrowingNeuralGasPlotter
 
 class GrowingNeuralGas(object):
 
-    def __init__(self, epsilon_b=.1, epsilon_n=.05, a_max=10, eta=5, alpha=.1, delta=.1, maxNumberUnits=1000):
+    def __init__(self, epsilon_a=.1, epsilon_n=.05, a_max=10, eta=5, alpha=.1, delta=.1, maxNumberUnits=1000):
         self.A = None
         self.N = []
         self.error_ = None
-        self.epsilon_b = epsilon_b
+        self.epsilon_a = epsilon_a
         self.epsilon_n = epsilon_n
         self.a_max = a_max
         self.eta = eta
@@ -82,18 +81,15 @@ class GrowingNeuralGas(object):
         return uniqueConnectedComponentIndeces.__len__(), connectedComponents
 
     def fit(self, trainingX, numberEpochs, modelLoaded=False):
-        print("Starting training with training set of shape", trainingX.shape)
-
-        if not modelLoaded:
+        if (modelLoaded == False):
             self.A = tf.Variable(tf.random.normal([2, trainingX.shape[1]], 0.0, 1.0, dtype=tf.float32))
             self.N.append(Graph(0))
             self.N.append(Graph(1))
             self.error_ = tf.Variable(tf.zeros([2, 1]), dtype=tf.float32)
 
-        epoch = 1
+        epoch = 0
         numberProcessedRow = 0
         while epoch < numberEpochs and self.A.shape[0] < self.maxNumberUnits:
-            initime = time()
             shuffledTrainingX = tf.random.shuffle(trainingX)
             for row_ in tf.range(shuffledTrainingX.shape[0]):
 
@@ -107,7 +103,7 @@ class GrowingNeuralGas(object):
                     tf.math.squared_difference(xi, self.A[indexNearestUnit])))
 
                 self.A[indexNearestUnit].assign(
-                    self.A[indexNearestUnit] + self.epsilon_b * (xi - self.A[indexNearestUnit]))
+                    self.A[indexNearestUnit] + self.epsilon_a * (xi - self.A[indexNearestUnit]))
                 for indexNeighbour in self.N[indexNearestUnit].neighborhood:
                     self.A[indexNeighbour].assign(
                         self.A[indexNeighbour] + self.epsilon_n * (xi - self.A[indexNeighbour]))
@@ -148,17 +144,17 @@ class GrowingNeuralGas(object):
                 self.error_.assign(self.error_ * self.delta)
                 numberProcessedRow += 1
 
-            print("GrowingNeuralGas::epoch: {}".format(epoch), "Time elapsed:", time()-initime)
-            # numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
-            # print("GrowingNeuralGas::numberUnits: {} - GrowingNeuralGas::numberGraphConnectedComponents: {}".format(
-            #     self.A.shape[0], numberGraphConnectedComponents))
-            # GrowingNeuralGasPlotter.plotGraphConnectedComponent('.//data',
-            #                                                     'graphConnectedComponents_' + '{}_{}'.format(
-            #                                                         self.A.shape[0], numberGraphConnectedComponents),
-            #                                                     self.A, self.N, trainingX, self.getEdges())
+            numberGraphConnectedComponents, _ = self.getGraphConnectedComponents()
+            print("GrowingNeuralGas::numberUnits: {} - GrowingNeuralGas::numberGraphConnectedComponents: {}".format(
+                self.A.shape[0], numberGraphConnectedComponents))
+            GrowingNeuralGasPlotter.plotGraphConnectedComponent('.//data',
+                                                                'graphConnectedComponents_' + '{}_{}'.format(
+                                                                    self.A.shape[0], numberGraphConnectedComponents),
+                                                                self.A, self.N, trainingX, self.getEdges())
             epoch += 1
-        # print("Saving model...")
-        # self.saveModel("model.h")
+            print("GrowingNeuralGas::epoch: {}".format(epoch))
+            print("Saving model...")
+            self.saveModel("model.h")
 
     def predict(self, X):
         if not self.clusters:
@@ -233,11 +229,11 @@ class GrowingNeuralGas(object):
         file = open(path, 'rb')
         loadedGNG = pickle.load(file)
         file.close()
-        self.A = loadedGNG.A
 
+        self.A = loadedGNG.A
         self.N = loadedGNG.N
         self.error_ = loadedGNG.error_
-        self.epsilon_b = loadedGNG.epsilon_b
+        self.epsilon_a = loadedGNG.epsilon_a
         self.epsilon_n = loadedGNG.epsilon_n
         self.a_max = loadedGNG.a_max
         self.eta = loadedGNG.eta
