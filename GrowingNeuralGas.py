@@ -12,7 +12,7 @@ from GrowingNeuralGasPlotter import GrowingNeuralGasPlotter
 
 class GrowingNeuralGas(object):
 
-    def __init__(self, epsilon_b=.1, epsilon_n=.05, a_max=10, eta=5, alpha=.1, delta=.1, maxNumberUnits=1000):
+    def __init__(self, epsilon_b=.1, epsilon_n=.05, a_max=10, eta=5, alpha=.1, delta=.1, maxNumberUnits=1000, random_seed=False, seed=0):
         self.A = None
         self.N = []
         self.error_ = None
@@ -25,6 +25,9 @@ class GrowingNeuralGas(object):
         self.maxNumberUnits = maxNumberUnits
 
         self.clusters = []
+
+        if random_seed:
+            tf.random.set_seed(seed)
 
     def incrementAgeNeighborhood(self, indexNearestUnit):
         self.N[indexNearestUnit].incrementAgeNeighborhood(1.0)
