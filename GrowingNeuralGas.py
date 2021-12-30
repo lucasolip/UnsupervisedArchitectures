@@ -81,7 +81,7 @@ class GrowingNeuralGas(object):
             connectedComponents.append(connectedComponent)
         return uniqueConnectedComponentIndeces.__len__(), connectedComponents
 
-    def fit(self, trainingX, numberEpochs, modelLoaded=False):
+    def fit(self, trainingX, numberEpochs, maxClusters = float("inf"), modelLoaded=False):
         print("Starting training with training set of shape", trainingX.shape)
 
         if not modelLoaded:
@@ -92,7 +92,7 @@ class GrowingNeuralGas(object):
 
         epoch = 1
         numberProcessedRow = 0
-        while epoch < numberEpochs and self.A.shape[0] < self.maxNumberUnits:
+        while epoch < numberEpochs and self.A.shape[0] < self.maxNumberUnits and self.countClusters() < maxClusters:
             initime = time()
             shuffledTrainingX = tf.random.shuffle(trainingX)
             for row_ in tf.range(shuffledTrainingX.shape[0]):
