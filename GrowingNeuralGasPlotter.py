@@ -17,9 +17,6 @@ class GrowingNeuralGasPlotter(object):
             graphZero = axis.scatter(x, y, z)
             for edge in edges:
                 axis.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
-            figure.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
-            figure.savefig(pathFigure + '//' + nameFigure + '.svg')
-            plt.close(figure)
         elif len(X[0]) == 2:
             figure = plt.figure()
             axis = figure.add_subplot(projection='3d')
@@ -31,7 +28,55 @@ class GrowingNeuralGasPlotter(object):
             graphZero = axis.scatter(x, y)
             for edge in edges:
                 axis.plot(edge[:, 0], edge[:, 1], 'r-')
-            figure.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
-            figure.savefig(pathFigure + '//' + nameFigure + '.svg')
-            plt.close(figure)
         # matplotlib.pyplot.show()
+        figure.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
+        plt.close(figure)
+
+    @staticmethod
+    def plotNetworkStructure2D(A, X, edges, title="", save=False, pathFigure=".//", nameFigure="networkStructure2D"):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        ax.scatter(X[:, 0], X[:, 1])
+        ax.scatter(A[:, 0], A[:, 1], c='r')
+        for edge in edges:
+            ax.plot(edge[:, 0], edge[:, 1], c='r')
+        ax.set_title(title)
+
+        if save:
+            fig.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
+
+    @staticmethod
+    def plotNetworkStructure3D(A, X, edges, title="", save=False, pathFigure=".//", nameFigure="networkStructure2D"):
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        ax.scatter(X[:, 0], X[:, 1], X[:, 2])
+        ax.scatter(A[:, 0], A[:, 1], A[:, 2], 'r')
+        for edge in edges:
+            ax.plot(edge[:, 0], edge[:, 1], edge[:, 2], 'r-')
+        ax.set_title(title)
+        if save:
+            fig.savefig(pathFigure + '//' + nameFigure + '.png', transparent=False, dpi=80, bbox_inches="tight")
+
+    @staticmethod
+    def plotClusters2D(growingNeuralGas, X, title=""):
+        fig = plt.figure()
+        ax = fig.add_subplot()
+        clusters = [0 for i in range(X.shape[0])]
+        for i in range(X.shape[0]):
+            clusters[i] = growingNeuralGas.predict(X[i])
+        ax.scatter(X[:, 0], X[:, 1], c=clusters)
+        ax.set_title(title)
+
+    @staticmethod
+    def plotClusters3D(growingNeuralGas, X, title=""):
+        fig = plt.figure()
+        ax = fig.add_subplot(projection='3d')
+        clusters = [0 for i in range(X.shape[0])]
+        for i in range(X.shape[0]):
+            clusters[i] = growingNeuralGas.predict(X[i])
+        ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=clusters)
+        ax.set_title(title)
+
+    @staticmethod
+    def show():
+        plt.show()
