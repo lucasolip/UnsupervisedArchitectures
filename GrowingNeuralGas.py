@@ -161,7 +161,7 @@ class GrowingNeuralGas(object):
             #                                                     self.A, self.N, trainingX, self.getEdges())
             epoch += 1
         # print("Saving model...")
-        # self.saveModel("model.h")
+        self.saveModel("model.h")
 
     def predict(self, X):
         if not self.clusters:
